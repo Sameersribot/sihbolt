@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   Alert,
   Keyboard,
 } from 'react-native';
+import type { KeyboardEventName, LayoutChangeEvent } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeft, Phone, Send } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -35,34 +36,54 @@ export default function ChatScreen() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [headerHeight, setHeaderHeight] = useState(0);
   const { session } = useAuth();
   const router = useRouter();
   const flatListRef = useRef<FlatList>(null);
   const insets = useSafeAreaInsets();
-  const inputBottomPadding = insets.bottom;
-  const listBottomPadding = inputBottomPadding;
-  const keyboardOffset = keyboardVisible
-    ? Platform.select({
-        ios: inputBottomPadding + insets.top + 44,
-        android: inputBottomPadding,
-        default: inputBottomPadding,
-      })
-    : 0;
+  const keyboardShowEvent: KeyboardEventName =
+    Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+  const keyboardHideEvent: KeyboardEventName =
+    Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+  const safeAreaBottom = insets.bottom;
+  const inputPaddingBottom =
+    keyboardVisible
+      ? 12
+      : safeAreaBottom > 0
+        ? safeAreaBottom
+        : 0;
+  const listBottomPadding = 16 + (!keyboardVisible ? safeAreaBottom : 0);
+  const keyboardVerticalOffset =
+    Platform.OS === 'ios' ? headerHeight : 0;
+  const handleHeaderLayout = useCallback(
+    ({ nativeEvent }: LayoutChangeEvent) => {
+      const { height } = nativeEvent.layout;
+      setHeaderHeight((current) =>
+        Math.abs(current - height) < 1 ? height : height
+      );
+    },
+    []
+  );
 
   useEffect(() => {
-    const showSub = Keyboard.addListener('keyboardDidShow', () =>
-      setKeyboardVisible(true)
-    );
-    const hideSub = Keyboard.addListener('keyboardDidHide', () => {
+    const showSub = Keyboard.addListener(keyboardShowEvent, () => {
+      setKeyboardVisible(true);
+      requestAnimationFrame(() =>
+        flatListRef.current?.scrollToEnd({ animated: true })
+      );
+    });
+    const hideSub = Keyboard.addListener(keyboardHideEvent, () => {
       setKeyboardVisible(false);
-      flatListRef.current?.scrollToEnd({ animated: true });
+      requestAnimationFrame(() =>
+        flatListRef.current?.scrollToEnd({ animated: true })
+      );
     });
 
     return () => {
       showSub.remove();
       hideSub.remove();
     };
-  }, []);
+  }, [keyboardShowEvent, keyboardHideEvent]);
 
   useEffect(() => {
     if (session?.user && id) {
@@ -78,9 +99,9 @@ export default function ChatScreen() {
             table: 'messages',
             filter: `conversation_id=eq.${id}`,
           },
-          (payload) => {
+          async (payload) => {
             const incoming = payload.new as Message;
-            const decryptedContent = decryptMessage(
+            const decryptedContent = await decryptMessage(
               incoming.ciphertext || incoming.content
             );
 
@@ -129,12 +150,19 @@ export default function ChatScreen() {
       .order('created_at', { ascending: true });
 
     if (messagesData) {
-      setMessages(
-        messagesData.map((message) => ({
-          ...message,
-          content: decryptMessage(message.ciphertext || message.content),
-        }))
+      const decrypted = await Promise.all(
+        (messagesData as any[]).map(async (raw) => {
+          const ciphertext =
+            typeof raw?.ciphertext === 'string' && raw.ciphertext.length > 0
+              ? raw.ciphertext
+              : raw?.content ?? '';
+          return {
+            ...(raw as Message),
+            content: await decryptMessage(ciphertext),
+          } as Message;
+        })
       );
+      setMessages(decrypted);
     }
 
     setLoading(false);
@@ -155,7 +183,7 @@ export default function ChatScreen() {
     setSending(true);
     const messageContent = newMessage.trim();
     setNewMessage('');
-    const encryptedContent = encryptMessage(messageContent);
+    const encryptedContent = await encryptMessage(messageContent);
 
     const baseMessagePayload: Record<string, any> = {
       conversation_id: id,
@@ -181,7 +209,7 @@ export default function ChatScreen() {
         },
         { ...baseMessagePayload },
         (() => {
-          const fallbackPayload = {
+          const fallbackPayload: Record<string, any> = {
             ...baseMessagePayload,
             content: encryptedContent,
           };
@@ -278,9 +306,9 @@ export default function ChatScreen() {
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={keyboardOffset}
+      keyboardVerticalOffset={keyboardVerticalOffset}
     >
-      <View style={styles.header}>
+      <View style={styles.header} onLayout={handleHeaderLayout}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => router.back()}
@@ -329,7 +357,7 @@ export default function ChatScreen() {
       <View
         style={[
           styles.inputContainer,
-          { paddingBottom: inputBottomPadding },
+          { paddingBottom: inputPaddingBottom },
         ]}
       >
         <TextInput
