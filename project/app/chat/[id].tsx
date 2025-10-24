@@ -1030,7 +1030,7 @@ export default function ChatScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color="#4CAF50" />
       </View>
     );
   }
@@ -1046,7 +1046,7 @@ export default function ChatScreen() {
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <ArrowLeft size={24} color="#007AFF" />
+          <ArrowLeft size={24} color="#4CAF50" />
         </TouchableOpacity>
         <View style={styles.headerInfo}>
           <View style={styles.headerAvatar}>
@@ -1055,15 +1055,15 @@ export default function ChatScreen() {
             </Text>
           </View>
           <Text style={styles.headerTitle}>
-            {otherUser?.display_name || 'Chat'}
+            {otherUser?.display_name || 'SECURE CHANNEL'}
           </Text>
         </View>
         <View style={styles.headerActions}>
           <TouchableOpacity style={styles.iconButton} activeOpacity={0.7}>
-            <Phone size={22} color="#007AFF" />
+            <Phone size={22} color="#4CAF50" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconButton} activeOpacity={0.7}>
-            <Video size={22} color="#007AFF" />
+            <Video size={22} color="#4CAF50" />
           </TouchableOpacity>
         </View>
       </View>
@@ -1127,13 +1127,13 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#0a0e1a',
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#0a0e1a',
   },
   header: {
     flexDirection: 'row',
@@ -1142,20 +1142,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 60,
     paddingBottom: 12,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    backgroundColor: '#141824',
+    borderBottomWidth: 2,
+    borderBottomColor: '#4CAF50',
+    shadowColor: '#4CAF50',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
   backButton: {
     width: 40,
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(76, 175, 80, 0.15)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#4CAF50',
   },
   headerInfo: {
     flex: 1,
@@ -1166,21 +1170,24 @@ const styles = StyleSheet.create({
   headerAvatar: {
     width: 36,
     height: 36,
-    borderRadius: 18,
-    backgroundColor: '#007AFF',
+    borderRadius: 4,
+    backgroundColor: '#4CAF50',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 8,
+    borderWidth: 1,
+    borderColor: '#7cb342',
   },
   headerAvatarText: {
-    color: '#fff',
+    color: '#000',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1a1a1a',
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#4CAF50',
+    letterSpacing: 1,
   },
   headerActions: {
     flexDirection: 'row',
@@ -1190,10 +1197,12 @@ const styles = StyleSheet.create({
   iconButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f0f4ff',
+    backgroundColor: 'rgba(76, 175, 80, 0.15)',
+    borderWidth: 1,
+    borderColor: '#4CAF50',
   },
   messagesList: {
     flexGrow: 1,
@@ -1217,22 +1226,22 @@ const styles = StyleSheet.create({
     maxWidth: '75%',
     paddingHorizontal: 14,
     paddingVertical: 10,
-    borderRadius: 18,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 1,
+    borderRadius: 4,
+    shadowColor: '#4CAF50',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
   },
   ownBubble: {
-    backgroundColor: '#007AFF',
-    borderBottomRightRadius: 6,
+    backgroundColor: '#4CAF50',
+    borderWidth: 1,
+    borderColor: '#7cb342',
   },
   otherBubble: {
-    backgroundColor: '#fff',
-    borderBottomLeftRadius: 6,
+    backgroundColor: '#141824',
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: '#4CAF50',
   },
   messageText: {
     fontSize: 16,
@@ -1240,10 +1249,11 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   ownText: {
-    color: '#fff',
+    color: '#000',
+    fontWeight: '600',
   },
   otherText: {
-    color: '#1a1a1a',
+    color: '#e0e0e0',
   },
   messageFooter: {
     flexDirection: 'row',
@@ -1251,18 +1261,20 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   messageTime: {
-    fontSize: 11,
+    fontSize: 10,
+    fontWeight: '600',
   },
   ownTime: {
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: 'rgba(0, 0, 0, 0.6)',
   },
   otherTime: {
-    color: '#999',
+    color: '#7cb342',
   },
   readIndicator: {
     fontSize: 11,
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: 'rgba(0, 0, 0, 0.6)',
     marginLeft: 2,
+    fontWeight: '700',
   },
   inputContainer: {
     flexDirection: 'row',
@@ -1270,45 +1282,43 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 12,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 3,
+    backgroundColor: '#141824',
+    borderTopWidth: 2,
+    borderTopColor: '#4CAF50',
+    shadowColor: '#4CAF50',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
   input: {
     flex: 1,
     minHeight: 42,
     maxHeight: 100,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 22,
+    borderColor: '#4CAF50',
+    borderRadius: 4,
     paddingHorizontal: 18,
     paddingVertical: 11,
     fontSize: 16,
-    backgroundColor: '#fff',
+    backgroundColor: '#1a2332',
+    color: '#e0e0e0',
     marginRight: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
   },
   sendButton: {
     width: 42,
     height: 42,
-    borderRadius: 21,
-    backgroundColor: '#007AFF',
+    borderRadius: 4,
+    backgroundColor: '#4CAF50',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#007AFF',
+    borderWidth: 1,
+    borderColor: '#7cb342',
+    shadowColor: '#4CAF50',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
-    elevation: 3,
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+    elevation: 6,
   },
   sendButtonDisabled: {
     opacity: 0.4,
@@ -1321,13 +1331,14 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#999',
+    fontWeight: '700',
+    color: '#4CAF50',
     marginBottom: 4,
+    letterSpacing: 1,
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#999',
+    color: '#7cb342',
   },
 });
 
