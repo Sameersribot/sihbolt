@@ -299,7 +299,7 @@ export default function ProfileScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color="#4CAF50" />
       </View>
     );
   }
@@ -307,12 +307,15 @@ export default function ProfileScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Profile</Text>
+        <View>
+          <Text style={styles.headerTitle}>PROFILE</Text>
+          <Text style={styles.teamBadge}>TEAM IIPE</Text>
+        </View>
         <TouchableOpacity
           style={styles.signOutButton}
           onPress={handleSignOut}
         >
-          <LogOut size={24} color="#FF3B30" />
+          <LogOut size={24} color="#ff5252" />
         </TouchableOpacity>
       </View>
 
@@ -363,13 +366,13 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#0a0e1a',
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#0a0e1a',
   },
   header: {
     flexDirection: 'row',
@@ -378,20 +381,37 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 60,
     paddingBottom: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    backgroundColor: '#141824',
+    borderBottomWidth: 2,
+    borderBottomColor: '#4CAF50',
+    shadowColor: '#4CAF50',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
   headerTitle: {
     fontSize: 32,
+    fontWeight: '900',
+    color: '#4CAF50',
+    letterSpacing: 2,
+  },
+  teamBadge: {
+    fontSize: 11,
     fontWeight: '700',
-    color: '#1a1a1a',
+    color: '#7cb342',
+    letterSpacing: 3,
+    marginTop: 2,
   },
   signOutButton: {
     width: 40,
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(255, 82, 82, 0.15)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ff5252',
   },
   content: {
     flex: 1,
@@ -403,10 +423,12 @@ const styles = StyleSheet.create({
   avatar: {
     width: 100,
     height: 100,
-    borderRadius: 50,
-    backgroundColor: '#007AFF',
+    borderRadius: 4,
+    backgroundColor: '#4CAF50',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#7cb342',
   },
   formContainer: {
     paddingHorizontal: 20,
@@ -415,38 +437,48 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#666',
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#7cb342',
     marginBottom: 8,
+    letterSpacing: 1,
   },
   input: {
     height: 48,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 8,
+    borderColor: '#4CAF50',
+    borderRadius: 4,
     paddingHorizontal: 12,
     fontSize: 16,
-    backgroundColor: '#fff',
+    backgroundColor: '#141824',
+    color: '#e0e0e0',
   },
   inputDisabled: {
-    backgroundColor: '#f9f9f9',
-    color: '#999',
+    backgroundColor: '#1a2332',
+    color: '#7cb342',
   },
   saveButton: {
     height: 48,
-    backgroundColor: '#007AFF',
-    borderRadius: 8,
+    backgroundColor: '#4CAF50',
+    borderRadius: 4,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 8,
+    borderWidth: 1,
+    borderColor: '#7cb342',
+    shadowColor: '#4CAF50',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 6,
   },
   buttonDisabled: {
-    opacity: 0.6,
+    opacity: 0.5,
   },
   saveButtonText: {
-    color: '#fff',
+    color: '#000',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
+    letterSpacing: 1,
   },
 });
