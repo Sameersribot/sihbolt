@@ -1101,6 +1101,7 @@ export default function ChatScreen() {
           value={newMessage}
           onChangeText={setNewMessage}
           placeholder="Type a message..."
+          placeholderTextColor="#7cb342"
           multiline
           maxLength={1000}
           onFocus={() => flatListRef.current?.scrollToEnd({ animated: true })}
