@@ -26,6 +26,7 @@ interface Message {
   ciphertext?: string | null;
   sender_id: string;
   created_at: string;
+  read: boolean;
 }
 
 export default function ChatScreen() {
@@ -105,13 +106,34 @@ export default function ChatScreen() {
               incoming.ciphertext || incoming.content
             );
 
-            setMessages((prev) => [
-              ...prev,
-              {
-                ...incoming,
-                content: decryptedContent,
-              },
-            ]);
+            const newMsg = {
+              ...incoming,
+              content: decryptedContent,
+            };
+
+            setMessages((prev) => [...prev, newMsg]);
+
+            if (incoming.sender_id !== session.user.id && !incoming.read) {
+              await supabase
+                .from('messages')
+                .update({ read: true })
+                .eq('id', incoming.id);
+            }
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'messages',
+            filter: `conversation_id=eq.${id}`,
+          },
+          (payload) => {
+            const updated = payload.new as Message;
+            setMessages((prev) =>
+              prev.map((msg) => (msg.id === updated.id ? { ...msg, read: updated.read } : msg))
+            );
           }
         )
         .subscribe();
@@ -163,6 +185,20 @@ export default function ChatScreen() {
         })
       );
       setMessages(decrypted);
+
+      const unreadMessages = decrypted.filter(
+        (msg) => msg.sender_id !== session.user.id && !msg.read
+      );
+
+      if (unreadMessages.length > 0) {
+        await supabase
+          .from('messages')
+          .update({ read: true })
+          .in(
+            'id',
+            unreadMessages.map((m) => m.id)
+          );
+      }
     }
 
     setLoading(false);
@@ -278,17 +314,22 @@ export default function ChatScreen() {
           >
             {item.content}
           </Text>
-          <Text
-            style={[
-              styles.messageTime,
-              isOwnMessage ? styles.ownTime : styles.otherTime,
-            ]}
-          >
-            {new Date(item.created_at).toLocaleTimeString([], {
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </Text>
+          <View style={styles.messageFooter}>
+            <Text
+              style={[
+                styles.messageTime,
+                isOwnMessage ? styles.ownTime : styles.otherTime,
+              ]}
+            >
+              {new Date(item.created_at).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </Text>
+            {isOwnMessage && (
+              <Text style={styles.readIndicator}>{item.read ? '✓✓' : '✓'}</Text>
+            )}
+          </View>
         </View>
       </View>
     );
@@ -512,6 +553,11 @@ const styles = StyleSheet.create({
   otherText: {
     color: '#1a1a1a',
   },
+  messageFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
   messageTime: {
     fontSize: 11,
   },
@@ -520,6 +566,11 @@ const styles = StyleSheet.create({
   },
   otherTime: {
     color: '#999',
+  },
+  readIndicator: {
+    fontSize: 11,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginLeft: 2,
   },
   inputContainer: {
     flexDirection: 'row',
