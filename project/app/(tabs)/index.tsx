@@ -827,7 +827,7 @@ export default function ChatsScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color="#4CAF50" />
       </View>
     );
   }
@@ -835,12 +835,15 @@ export default function ChatsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Chats</Text>
+        <View>
+          <Text style={styles.headerTitle}>DEFCOM</Text>
+          <Text style={styles.teamBadge}>TEAM IIPE</Text>
+        </View>
         <TouchableOpacity
           style={styles.newChatButton}
           onPress={() => setShowNewChat(true)}
         >
-          <Plus size={24} color="#007AFF" />
+          <Plus size={24} color="#4CAF50" />
         </TouchableOpacity>
       </View>
 
@@ -869,7 +872,7 @@ export default function ChatsScreen() {
       )}
 
       <View style={styles.searchContainer}>
-        <Search size={20} color="#999" style={styles.searchIcon} />
+        <Search size={20} color="#4CAF50" style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
           placeholder="Search chats"
@@ -904,13 +907,13 @@ export default function ChatsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#0a0e1a',
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#0a0e1a',
   },
   header: {
     flexDirection: 'row',
@@ -919,65 +922,93 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 60,
     paddingBottom: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    backgroundColor: '#141824',
+    borderBottomWidth: 2,
+    borderBottomColor: '#4CAF50',
+    shadowColor: '#4CAF50',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
   headerTitle: {
     fontSize: 32,
+    fontWeight: '900',
+    color: '#4CAF50',
+    letterSpacing: 2,
+    textShadowColor: 'rgba(76, 175, 80, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  teamBadge: {
+    fontSize: 11,
     fontWeight: '700',
-    color: '#1a1a1a',
+    color: '#7cb342',
+    letterSpacing: 3,
+    marginTop: 2,
   },
   newChatButton: {
     width: 40,
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(76, 175, 80, 0.15)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#4CAF50',
   },
   newChatContainer: {
     padding: 16,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#1a2332',
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: '#4CAF50',
   },
   newChatInput: {
     height: 48,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 8,
+    borderColor: '#4CAF50',
+    borderRadius: 4,
     paddingHorizontal: 12,
     fontSize: 16,
-    backgroundColor: '#fff',
+    backgroundColor: '#141824',
+    color: '#e0e0e0',
     marginBottom: 8,
   },
   createButton: {
     height: 48,
-    backgroundColor: '#007AFF',
-    borderRadius: 8,
+    backgroundColor: '#4CAF50',
+    borderRadius: 4,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#7cb342',
   },
   createButtonText: {
-    color: '#fff',
+    color: '#000',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
+    letterSpacing: 1,
   },
   cancelButton: {
     height: 48,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#4CAF50',
+    borderRadius: 4,
   },
   cancelButtonText: {
-    color: '#007AFF',
+    color: '#4CAF50',
     fontSize: 16,
+    fontWeight: '600',
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 12,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#1a2332',
   },
   searchIcon: {
     marginRight: 8,
@@ -986,6 +1017,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 40,
     fontSize: 16,
+    color: '#e0e0e0',
   },
   listContent: {
     paddingVertical: 8,
@@ -995,21 +1027,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: '#1a2332',
+    backgroundColor: '#141824',
+    marginHorizontal: 12,
+    marginVertical: 4,
+    borderRadius: 4,
+    borderLeftWidth: 3,
+    borderLeftColor: '#4CAF50',
   },
   avatar: {
     width: 50,
     height: 50,
-    borderRadius: 25,
-    backgroundColor: '#007AFF',
+    borderRadius: 4,
+    backgroundColor: '#4CAF50',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
+    borderWidth: 1,
+    borderColor: '#7cb342',
   },
   avatarText: {
-    color: '#fff',
+    color: '#000',
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   conversationContent: {
     flex: 1,
@@ -1023,16 +1063,16 @@ const styles = StyleSheet.create({
   },
   conversationName: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#1a1a1a',
+    fontWeight: '700',
+    color: '#4CAF50',
   },
   conversationTime: {
     fontSize: 12,
-    color: '#999',
+    color: '#7cb342',
   },
   conversationMessage: {
     fontSize: 14,
-    color: '#666',
+    color: '#a0a0a0',
   },
   emptyContainer: {
     flex: 1,
@@ -1042,13 +1082,14 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 20,
-    fontWeight: '600',
-    color: '#999',
+    fontWeight: '700',
+    color: '#4CAF50',
     marginBottom: 8,
+    letterSpacing: 1,
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#999',
+    color: '#7cb342',
     textAlign: 'center',
   },
 });
