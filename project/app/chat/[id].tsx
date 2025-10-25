@@ -703,6 +703,7 @@ import {
   ActivityIndicator,
   Alert,
   Keyboard,
+  Animated,
 } from 'react-native';
 import type { KeyboardEventName, LayoutChangeEvent } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -721,6 +722,137 @@ interface Message {
   read: boolean;
 }
 
+const AnimatedMessage = ({ item, isOwnMessage, session }: { item: Message; isOwnMessage: boolean; session: any }) => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
+  const scaleAnim = useRef(new Animated.Value(0.9)).current;
+  const glowAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 8,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(glowAnim, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: false,
+        }),
+        Animated.timing(glowAnim, {
+          toValue: 0,
+          duration: 2000,
+          useNativeDriver: false,
+        }),
+      ])
+    ).start();
+  }, []);
+
+  return (
+    <Animated.View
+      style={[
+        styles.messageContainer,
+        isOwnMessage ? styles.ownMessage : styles.otherMessage,
+        {
+          opacity: fadeAnim,
+          transform: [
+            { translateY: slideAnim },
+            { scale: scaleAnim },
+          ],
+        },
+      ]}
+    >
+      <Animated.View
+        style={[
+          styles.messageBubble,
+          isOwnMessage ? styles.ownBubble : styles.otherBubble,
+          {
+            shadowOpacity: glowAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0.2, 0.4],
+            }),
+          },
+        ]}
+      >
+        <Text
+          style={[
+            styles.messageText,
+            isOwnMessage ? styles.ownText : styles.otherText,
+          ]}
+        >
+          {item.content}
+        </Text>
+        <View style={styles.messageFooter}>
+          <Text
+            style={[
+              styles.messageTime,
+              isOwnMessage ? styles.ownTime : styles.otherTime,
+            ]}
+          >
+            {new Date(item.created_at).toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </Text>
+          {isOwnMessage && (
+            <Text style={styles.readIndicator}>{item.read ? '✓✓' : '✓'}</Text>
+          )}
+        </View>
+      </Animated.View>
+    </Animated.View>
+  );
+};
+
+const AnimatedButton = ({ children, style, onPress, disabled }: any) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.92,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      friction: 3,
+      tension: 40,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  return (
+    <TouchableOpacity
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      onPress={onPress}
+      disabled={disabled}
+      activeOpacity={1}
+    >
+      <Animated.View style={[style, { transform: [{ scale: scaleAnim }] }]}>
+        {children}
+      </Animated.View>
+    </TouchableOpacity>
+  );
+};
+
 export default function ChatScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -734,6 +866,7 @@ export default function ChatScreen() {
   const router = useRouter();
   const flatListRef = useRef<FlatList>(null);
   const insets = useSafeAreaInsets();
+  const inputBorderPulse = useRef(new Animated.Value(0)).current;
   const keyboardShowEvent: KeyboardEventName =
     Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
   const keyboardHideEvent: KeyboardEventName =
@@ -757,6 +890,27 @@ export default function ChatScreen() {
     },
     []
   );
+
+  useEffect(() => {
+    if (newMessage.trim()) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(inputBorderPulse, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: false,
+          }),
+          Animated.timing(inputBorderPulse, {
+            toValue: 0,
+            duration: 1000,
+            useNativeDriver: false,
+          }),
+        ])
+      ).start();
+    } else {
+      inputBorderPulse.setValue(0);
+    }
+  }, [newMessage]);
 
   useEffect(() => {
     const showSub = Keyboard.addListener(keyboardShowEvent, () => {
@@ -984,45 +1138,54 @@ export default function ChatScreen() {
 
   const renderMessage = ({ item }: { item: Message }) => {
     const isOwnMessage = item.sender_id === session?.user.id;
+    return (
+      <AnimatedMessage
+        item={item}
+        isOwnMessage={isOwnMessage}
+        session={session}
+      />
+    );
+  };
+
+  const LoadingAnimation = () => {
+    const pulse1 = useRef(new Animated.Value(0.3)).current;
+    const pulse2 = useRef(new Animated.Value(0.3)).current;
+    const pulse3 = useRef(new Animated.Value(0.3)).current;
+
+    useEffect(() => {
+      const createPulse = (anim: Animated.Value, delay: number) => {
+        return Animated.loop(
+          Animated.sequence([
+            Animated.delay(delay),
+            Animated.timing(anim, {
+              toValue: 1,
+              duration: 600,
+              useNativeDriver: true,
+            }),
+            Animated.timing(anim, {
+              toValue: 0.3,
+              duration: 600,
+              useNativeDriver: true,
+            }),
+          ])
+        );
+      };
+
+      Animated.parallel([
+        createPulse(pulse1, 0),
+        createPulse(pulse2, 200),
+        createPulse(pulse3, 400),
+      ]).start();
+    }, []);
 
     return (
-      <View
-        style={[
-          styles.messageContainer,
-          isOwnMessage ? styles.ownMessage : styles.otherMessage,
-        ]}
-      >
-        <View
-          style={[
-            styles.messageBubble,
-            isOwnMessage ? styles.ownBubble : styles.otherBubble,
-          ]}
-        >
-          <Text
-            style={[
-              styles.messageText,
-              isOwnMessage ? styles.ownText : styles.otherText,
-            ]}
-          >
-            {item.content}
-          </Text>
-          <View style={styles.messageFooter}>
-            <Text
-              style={[
-                styles.messageTime,
-                isOwnMessage ? styles.ownTime : styles.otherTime,
-              ]}
-            >
-              {new Date(item.created_at).toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </Text>
-            {isOwnMessage && (
-              <Text style={styles.readIndicator}>{item.read ? '✓✓' : '✓'}</Text>
-            )}
-          </View>
+      <View style={styles.loadingContainer}>
+        <View style={styles.loadingDots}>
+          <Animated.View style={[styles.loadingDot, { opacity: pulse1 }]} />
+          <Animated.View style={[styles.loadingDot, { opacity: pulse2 }]} />
+          <Animated.View style={[styles.loadingDot, { opacity: pulse3 }]} />
         </View>
+        <Text style={styles.loadingText}>ESTABLISHING SECURE CONNECTION</Text>
       </View>
     );
   };
@@ -1030,7 +1193,7 @@ export default function ChatScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#4CAF50" />
+        <LoadingAnimation />
       </View>
     );
   }
@@ -1042,12 +1205,9 @@ export default function ChatScreen() {
       keyboardVerticalOffset={keyboardVerticalOffset}
     >
       <View style={styles.header} onLayout={handleHeaderLayout}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
+        <AnimatedButton style={styles.backButton} onPress={() => router.back()}>
           <ArrowLeft size={24} color="#4CAF50" />
-        </TouchableOpacity>
+        </AnimatedButton>
         <View style={styles.headerInfo}>
           <View style={styles.headerAvatar}>
             <Text style={styles.headerAvatarText}>
@@ -1059,12 +1219,12 @@ export default function ChatScreen() {
           </Text>
         </View>
         <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.iconButton} activeOpacity={0.7}>
+          <AnimatedButton style={styles.iconButton} onPress={() => {}}>
             <Phone size={22} color="#4CAF50" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton} activeOpacity={0.7}>
+          </AnimatedButton>
+          <AnimatedButton style={styles.iconButton} onPress={() => {}}>
             <Video size={22} color="#4CAF50" />
-          </TouchableOpacity>
+          </AnimatedButton>
         </View>
       </View>
 
@@ -1096,17 +1256,33 @@ export default function ChatScreen() {
           { paddingBottom: inputPaddingBottom },
         ]}
       >
-        <TextInput
-          style={styles.input}
-          value={newMessage}
-          onChangeText={setNewMessage}
-          placeholder="Type a message..."
-          placeholderTextColor="#7cb342"
-          multiline
-          maxLength={1000}
-          onFocus={() => flatListRef.current?.scrollToEnd({ animated: true })}
-        />
-        <TouchableOpacity
+        <Animated.View
+          style={[
+            styles.inputWrapper,
+            {
+              borderColor: inputBorderPulse.interpolate({
+                inputRange: [0, 1],
+                outputRange: ['#4CAF50', '#7cb342'],
+              }),
+              shadowOpacity: inputBorderPulse.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.3, 0.6],
+              }),
+            },
+          ]}
+        >
+          <TextInput
+            style={styles.input}
+            value={newMessage}
+            onChangeText={setNewMessage}
+            placeholder="Type a message..."
+            placeholderTextColor="#7cb342"
+            multiline
+            maxLength={1000}
+            onFocus={() => flatListRef.current?.scrollToEnd({ animated: true })}
+          />
+        </Animated.View>
+        <AnimatedButton
           style={[
             styles.sendButton,
             (!newMessage.trim() || sending) && styles.sendButtonDisabled,
@@ -1115,11 +1291,11 @@ export default function ChatScreen() {
           disabled={!newMessage.trim() || sending}
         >
           {sending ? (
-            <ActivityIndicator size="small" color="#fff" />
+            <ActivityIndicator size="small" color="#000" />
           ) : (
-            <Send size={20} color="#fff" />
+            <Send size={20} color="#000" />
           )}
-        </TouchableOpacity>
+        </AnimatedButton>
       </View>
     </KeyboardAvoidingView>
   );
@@ -1135,6 +1311,31 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#0a0e1a',
+  },
+  loadingContainer: {
+    alignItems: 'center',
+  },
+  loadingDots: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 24,
+  },
+  loadingDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#4CAF50',
+    shadowColor: '#4CAF50',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  loadingText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#7cb342',
+    letterSpacing: 2,
   },
   header: {
     flexDirection: 'row',
@@ -1292,19 +1493,25 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 4,
   },
-  input: {
+  inputWrapper: {
     flex: 1,
-    minHeight: 42,
-    maxHeight: 100,
     borderWidth: 1,
     borderColor: '#4CAF50',
     borderRadius: 4,
+    backgroundColor: '#1a2332',
+    marginRight: 10,
+    shadowColor: '#4CAF50',
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  input: {
+    minHeight: 42,
+    maxHeight: 100,
     paddingHorizontal: 18,
     paddingVertical: 11,
     fontSize: 16,
-    backgroundColor: '#1a2332',
     color: '#e0e0e0',
-    marginRight: 10,
   },
   sendButton: {
     width: 42,
