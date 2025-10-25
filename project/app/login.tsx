@@ -143,10 +143,13 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
+import { Mail } from 'lucide-react-native';
+import { theme } from '@/constants/theme';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  const [focused, setFocused] = useState(false);
   const { signInWithEmail } = useAuth();
   const router = useRouter();
 
@@ -171,42 +174,52 @@ export default function LoginScreen() {
     <View style={styles.container}>
       <View style={styles.content}>
         <View style={styles.logoContainer}>
-          <View style={styles.logoBox}>
-            <Text style={styles.logoText}>DEFCOM</Text>
+          <View style={styles.iconCircle}>
+            <Mail size={48} color={theme.colors.primary} />
           </View>
-          <Text style={styles.teamBadge}>TEAM IIPE</Text>
-        </View>
-        <Text style={styles.title}>SECURE ACCESS</Text>
-        <Text style={styles.subtitle}>Enter credentials to continue</Text>
-
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Email address"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoComplete="email"
-            autoCapitalize="none"
-            editable={!loading}
-          />
+          <Text style={styles.title}>Welcome Back</Text>
+          <Text style={styles.subtitle}>Sign in to continue to your messages</Text>
         </View>
 
-        <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
-          onPress={handleSendOtp}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Send OTP</Text>
-          )}
-        </TouchableOpacity>
+        <View style={styles.formContainer}>
+          <Text style={styles.label}>Email Address</Text>
+          <View style={[
+            styles.inputWrapper,
+            focused && styles.inputWrapperFocused
+          ]}>
+            <Mail size={20} color={focused ? theme.colors.primary : theme.colors.textSecondary} style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your email"
+              placeholderTextColor={theme.colors.textDisabled}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoComplete="email"
+              autoCapitalize="none"
+              editable={!loading}
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
+            />
+          </View>
 
-        <Text style={styles.infoText}>
-          You'll receive a verification code via email
-        </Text>
+          <TouchableOpacity
+            style={[styles.button, loading && styles.buttonDisabled]}
+            onPress={handleSendOtp}
+            disabled={loading}
+            activeOpacity={0.8}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Continue</Text>
+            )}
+          </TouchableOpacity>
+
+          <Text style={styles.infoText}>
+            We'll send you a verification code to your email
+          </Text>
+        </View>
       </View>
     </View>
   );
@@ -215,101 +228,89 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0e1a',
+    backgroundColor: theme.colors.background,
   },
   content: {
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: theme.spacing.lg,
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: theme.spacing.xxl,
   },
-  logoBox: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    backgroundColor: '#141824',
-    borderWidth: 2,
-    borderColor: '#4CAF50',
-    borderRadius: 4,
-    shadowColor: '#4CAF50',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  logoText: {
-    fontSize: 36,
-    fontWeight: '900',
-    color: '#4CAF50',
-    letterSpacing: 4,
-    textShadowColor: 'rgba(76, 175, 80, 0.5)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 6,
-  },
-  teamBadge: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#7cb342',
-    letterSpacing: 4,
-    marginTop: 8,
+  iconCircle: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: theme.colors.primaryLight + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: theme.spacing.lg,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#4CAF50',
-    marginBottom: 8,
+    ...theme.typography.h1,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.sm,
     textAlign: 'center',
-    letterSpacing: 2,
   },
   subtitle: {
-    fontSize: 14,
-    color: '#7cb342',
-    marginBottom: 40,
+    ...theme.typography.bodySmall,
+    color: theme.colors.textSecondary,
     textAlign: 'center',
-    letterSpacing: 1,
   },
-  inputContainer: {
-    marginBottom: 24,
+  formContainer: {
+    width: '100%',
   },
-  input: {
+  label: {
+    ...theme.typography.bodySmall,
+    color: theme.colors.text,
+    fontWeight: '600',
+    marginBottom: theme.spacing.sm,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
     height: 56,
     borderWidth: 1,
-    borderColor: '#4CAF50',
-    borderRadius: 4,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    backgroundColor: '#141824',
-    color: '#e0e0e0',
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.md,
+    paddingHorizontal: theme.spacing.md,
+    backgroundColor: theme.colors.surface,
+    marginBottom: theme.spacing.lg,
+    ...theme.shadows.sm,
+  },
+  inputWrapperFocused: {
+    borderColor: theme.colors.primary,
+    borderWidth: 2,
+  },
+  inputIcon: {
+    marginRight: theme.spacing.sm,
+  },
+  input: {
+    flex: 1,
+    ...theme.typography.body,
+    color: theme.colors.text,
   },
   button: {
     height: 56,
-    backgroundColor: '#4CAF50',
-    borderRadius: 4,
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.borderRadius.md,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#7cb342',
-    shadowColor: '#4CAF50',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 6,
+    marginBottom: theme.spacing.md,
+    ...theme.shadows.md,
   },
   buttonDisabled: {
-    opacity: 0.5,
+    opacity: 0.6,
   },
   buttonText: {
-    color: '#000',
-    fontSize: 18,
-    fontWeight: '700',
-    letterSpacing: 2,
+    ...theme.typography.button,
+    color: '#FFFFFF',
   },
   infoText: {
-    fontSize: 13,
-    color: '#7cb342',
+    ...theme.typography.caption,
+    color: theme.colors.textSecondary,
     textAlign: 'center',
   },
 });

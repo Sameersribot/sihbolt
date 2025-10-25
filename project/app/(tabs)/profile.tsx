@@ -1,164 +1,3 @@
-ignOut = async () => {
-//     await signOut();
-//     router.replace('/login');
-//   };
-
-//   if (loading) {
-//     return (
-//       <View style={styles.centered}>
-//         <ActivityIndicator size="large" color="#007AFF" />
-//       </View>
-//     );
-//   }
-
-//   return (
-//     <View style={styles.container}>
-//       <View style={styles.header}>
-//         <Text style={styles.headerTitle}>Profile</Text>
-//         <TouchableOpacity
-//           style={styles.signOutButton}
-//           onPress={handleSignOut}
-//         >
-//           <LogOut size={24} color="#FF3B30" />
-//         </TouchableOpacity>
-//       </View>
-
-//       <View style={styles.content}>
-//         <View style={styles.avatarContainer}>
-//           <View style={styles.avatar}>
-//             <UserIcon size={48} color="#fff" />
-//           </View>
-//         </View>
-
-//         <View style={styles.formContainer}>
-//           <View style={styles.fieldContainer}>
-//             <Text style={styles.label}>Display Name</Text>
-//             <TextInput
-//               style={styles.input}
-//               value={displayName}
-//               onChangeText={setDisplayName}
-//               placeholder="Enter your display name"
-//             />
-//           </View>
-
-//           <View style={styles.fieldContainer}>
-//             <Text style={styles.label}>Phone Number</Text>
-//             <TextInput
-//               style={[styles.input, styles.inputDisabled]}
-//               value={phoneNumber}
-//               editable={false}
-//             />
-//           </View>
-
-//           <TouchableOpacity
-//             style={[styles.saveButton, saving && styles.buttonDisabled]}
-//             onPress={handleSaveProfile}
-//             disabled={saving}
-//           >
-//             {saving ? (
-//               <ActivityIndicator color="#fff" />
-//             ) : (
-//               <Text style={styles.saveButtonText}>Save Changes</Text>
-//             )}
-//           </TouchableOpacity>
-//         </View>
-//       </View>
-//     </View>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: '#fff',
-//   },
-//   centered: {
-//     flex: 1,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     backgroundColor: '#fff',
-//   },
-//   header: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     alignItems: 'center',
-//     paddingHorizontal: 20,
-//     paddingTop: 60,
-//     paddingBottom: 16,
-//     backgroundColor: '#fff',
-//     borderBottomWidth: 1,
-//     borderBottomColor: '#e0e0e0',
-//   },
-//   headerTitle: {
-//     fontSize: 32,
-//     fontWeight: '700',
-//     color: '#1a1a1a',
-//   },
-//   signOutButton: {
-//     width: 40,
-//     height: 40,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//   },
-//   content: {
-//     flex: 1,
-//   },
-//   avatarContainer: {
-//     alignItems: 'center',
-//     paddingVertical: 32,
-//   },
-//   avatar: {
-//     width: 100,
-//     height: 100,
-//     borderRadius: 50,
-//     backgroundColor: '#007AFF',
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//   },
-//   formContainer: {
-//     paddingHorizontal: 20,
-//   },
-//   fieldContainer: {
-//     marginBottom: 24,
-//   },
-//   label: {
-//     fontSize: 14,
-//     fontWeight: '600',
-//     color: '#666',
-//     marginBottom: 8,
-//   },
-//   input: {
-//     height: 48,
-//     borderWidth: 1,
-//     borderColor: '#e0e0e0',
-//     borderRadius: 8,
-//     paddingHorizontal: 12,
-//     fontSize: 16,
-//     backgroundColor: '#fff',
-//   },
-//   inputDisabled: {
-//     backgroundColor: '#f9f9f9',
-//     color: '#999',
-//   },
-//   saveButton: {
-//     height: 48,
-//     backgroundColor: '#007AFF',
-//     borderRadius: 8,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     marginTop: 8,
-//   },
-//   buttonDisabled: {
-//     opacity: 0.6,
-//   },
-//   saveButtonText: {
-//     color: '#fff',
-//     fontSize: 16,
-//     fontWeight: '600',
-//   },
-// });
-
-
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -168,11 +7,13 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { LogOut, User as UserIcon } from 'lucide-react-native';
+import { LogOut, User as UserIcon, Mail } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { theme } from '@/constants/theme';
 
 export default function ProfileScreen() {
   const [displayName, setDisplayName] = useState('');
@@ -226,193 +67,220 @@ export default function ProfileScreen() {
   };
 
   const handleSignOut = async () => {
-    await signOut();
-    router.replace('/login');
+    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      {
+        text: 'Sign Out',
+        style: 'destructive',
+        onPress: async () => {
+          await signOut();
+          router.replace('/login');
+        },
+      },
+    ]);
   };
 
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#4CAF50" />
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       <View style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>PROFILE</Text>
-          <Text style={styles.teamBadge}>TEAM IIPE</Text>
-        </View>
-        <TouchableOpacity
-          style={styles.signOutButton}
-          onPress={handleSignOut}
-        >
-          <LogOut size={24} color="#ff5252" />
-        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Profile</Text>
       </View>
 
       <View style={styles.content}>
         <View style={styles.avatarContainer}>
           <View style={styles.avatar}>
-            <UserIcon size={48} color="#fff" />
+            <UserIcon size={48} color={theme.colors.surface} />
           </View>
+          <Text style={styles.avatarLabel}>Your Profile</Text>
         </View>
 
         <View style={styles.formContainer}>
           <View style={styles.fieldContainer}>
             <Text style={styles.label}>Display Name</Text>
-            <TextInput
-              style={styles.input}
-              value={displayName}
-              onChangeText={setDisplayName}
-              placeholder="Enter your display name"
-            />
+            <View style={styles.inputWrapper}>
+              <UserIcon size={20} color={theme.colors.textSecondary} style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                value={displayName}
+                onChangeText={setDisplayName}
+                placeholder="Enter your display name"
+                placeholderTextColor={theme.colors.textDisabled}
+              />
+            </View>
           </View>
 
           <View style={styles.fieldContainer}>
             <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={[styles.input, styles.inputDisabled]}
-              value={phoneNumber}
-              editable={false}
-            />
+            <View style={[styles.inputWrapper, styles.inputDisabled]}>
+              <Mail size={20} color={theme.colors.textDisabled} style={styles.inputIcon} />
+              <TextInput
+                style={[styles.input, styles.disabledText]}
+                value={phoneNumber}
+                editable={false}
+              />
+            </View>
+            <Text style={styles.helpText}>Email address cannot be changed</Text>
           </View>
 
           <TouchableOpacity
             style={[styles.saveButton, saving && styles.buttonDisabled]}
             onPress={handleSaveProfile}
             disabled={saving}
+            activeOpacity={0.8}
           >
             {saving ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={theme.colors.surface} />
             ) : (
               <Text style={styles.saveButtonText}>Save Changes</Text>
             )}
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.signOutButton}
+            onPress={handleSignOut}
+            activeOpacity={0.8}
+          >
+            <LogOut size={20} color={theme.colors.error} />
+            <Text style={styles.signOutButtonText}>Sign Out</Text>
+          </TouchableOpacity>
         </View>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0e1a',
+    backgroundColor: theme.colors.background,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#0a0e1a',
+    backgroundColor: theme.colors.background,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: theme.spacing.lg,
     paddingTop: 60,
-    paddingBottom: 16,
-    backgroundColor: '#141824',
-    borderBottomWidth: 2,
-    borderBottomColor: '#4CAF50',
-    shadowColor: '#4CAF50',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
+    paddingBottom: theme.spacing.md,
+    backgroundColor: theme.colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.divider,
+    ...theme.shadows.sm,
   },
   headerTitle: {
-    fontSize: 32,
-    fontWeight: '900',
-    color: '#4CAF50',
-    letterSpacing: 2,
-  },
-  teamBadge: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#7cb342',
-    letterSpacing: 3,
-    marginTop: 2,
-  },
-  signOutButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 82, 82, 0.15)',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ff5252',
+    ...theme.typography.h1,
+    color: theme.colors.text,
   },
   content: {
     flex: 1,
   },
   avatarContainer: {
     alignItems: 'center',
-    paddingVertical: 32,
+    paddingVertical: theme.spacing.xl,
+    backgroundColor: theme.colors.surface,
+    marginBottom: theme.spacing.lg,
   },
   avatar: {
     width: 100,
     height: 100,
-    borderRadius: 4,
-    backgroundColor: '#4CAF50',
+    borderRadius: theme.borderRadius.full,
+    backgroundColor: theme.colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#7cb342',
+    marginBottom: theme.spacing.md,
+    ...theme.shadows.md,
+  },
+  avatarLabel: {
+    ...theme.typography.body,
+    color: theme.colors.textSecondary,
   },
   formContainer: {
-    paddingHorizontal: 20,
+    paddingHorizontal: theme.spacing.lg,
   },
   fieldContainer: {
-    marginBottom: 24,
+    marginBottom: theme.spacing.lg,
   },
   label: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#7cb342',
-    marginBottom: 8,
-    letterSpacing: 1,
+    ...theme.typography.bodySmall,
+    color: theme.colors.text,
+    fontWeight: '600',
+    marginBottom: theme.spacing.sm,
   },
-  input: {
-    height: 48,
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 56,
     borderWidth: 1,
-    borderColor: '#4CAF50',
-    borderRadius: 4,
-    paddingHorizontal: 12,
-    fontSize: 16,
-    backgroundColor: '#141824',
-    color: '#e0e0e0',
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.md,
+    paddingHorizontal: theme.spacing.md,
+    backgroundColor: theme.colors.surface,
+    ...theme.shadows.sm,
   },
   inputDisabled: {
-    backgroundColor: '#1a2332',
-    color: '#7cb342',
+    backgroundColor: theme.colors.surfaceVariant,
+  },
+  inputIcon: {
+    marginRight: theme.spacing.sm,
+  },
+  input: {
+    flex: 1,
+    ...theme.typography.body,
+    color: theme.colors.text,
+  },
+  disabledText: {
+    color: theme.colors.textDisabled,
+  },
+  helpText: {
+    ...theme.typography.caption,
+    color: theme.colors.textSecondary,
+    marginTop: theme.spacing.xs,
   },
   saveButton: {
-    height: 48,
-    backgroundColor: '#4CAF50',
-    borderRadius: 4,
+    height: 56,
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.borderRadius.md,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 8,
-    borderWidth: 1,
-    borderColor: '#7cb342',
-    shadowColor: '#4CAF50',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 6,
+    marginTop: theme.spacing.sm,
+    marginBottom: theme.spacing.md,
+    ...theme.shadows.md,
   },
   buttonDisabled: {
-    opacity: 0.5,
+    opacity: 0.6,
   },
   saveButtonText: {
-    color: '#000',
-    fontSize: 16,
-    fontWeight: '700',
-    letterSpacing: 1,
+    ...theme.typography.button,
+    color: theme.colors.surface,
+  },
+  signOutButton: {
+    flexDirection: 'row',
+    height: 56,
+    borderWidth: 1,
+    borderColor: theme.colors.error,
+    borderRadius: theme.borderRadius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+  },
+  signOutButtonText: {
+    ...theme.typography.button,
+    color: theme.colors.error,
   },
 });

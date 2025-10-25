@@ -170,6 +170,8 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
+import { Mail } from 'lucide-react-native';
+import { theme } from '@/constants/theme';
 
 export default function VerifyOtpScreen() {
   const [otp, setOtp] = useState('');
@@ -211,20 +213,21 @@ export default function VerifyOtpScreen() {
     <View style={styles.container}>
       <View style={styles.content}>
         <View style={styles.logoContainer}>
-          <View style={styles.logoBox}>
-            <Text style={styles.logoText}>DEFCOM</Text>
+          <View style={styles.iconCircle}>
+            <Mail size={48} color={theme.colors.primary} />
           </View>
-          <Text style={styles.teamBadge}>TEAM IIPE</Text>
+          <Text style={styles.title}>Verify Your Email</Text>
+          <Text style={styles.subtitle}>
+            We sent a code to {email}
+          </Text>
         </View>
-        <Text style={styles.title}>VERIFICATION REQUIRED</Text>
-        <Text style={styles.subtitle}>
-          Code sent to {email}
-        </Text>
 
-        <View style={styles.inputContainer}>
+        <View style={styles.formContainer}>
+          <Text style={styles.label}>Enter Code</Text>
           <TextInput
             style={styles.input}
-            placeholder="Enter 6-digit OTP"
+            placeholder="000000"
+            placeholderTextColor={theme.colors.textDisabled}
             value={otp}
             onChangeText={setOtp}
             keyboardType="number-pad"
@@ -232,27 +235,29 @@ export default function VerifyOtpScreen() {
             editable={!loading}
             autoFocus
           />
+
+          <TouchableOpacity
+            style={[styles.button, loading && styles.buttonDisabled]}
+            onPress={handleVerifyOtp}
+            disabled={loading}
+            activeOpacity={0.8}
+          >
+            {loading ? (
+              <ActivityIndicator color={theme.colors.surface} />
+            ) : (
+              <Text style={styles.buttonText}>Verify Code</Text>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.resendButton}
+            onPress={handleResendOtp}
+            disabled={loading}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.resendText}>Resend Code</Text>
+          </TouchableOpacity>
         </View>
-
-        <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
-          onPress={handleVerifyOtp}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Verify</Text>
-          )}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.resendButton}
-          onPress={handleResendOtp}
-          disabled={loading}
-        >
-          <Text style={styles.resendText}>Resend OTP</Text>
-        </TouchableOpacity>
       </View>
     </View>
   );
@@ -261,111 +266,85 @@ export default function VerifyOtpScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0e1a',
+    backgroundColor: theme.colors.background,
   },
   content: {
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: theme.spacing.lg,
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: theme.spacing.xxl,
   },
-  logoBox: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    backgroundColor: '#141824',
-    borderWidth: 2,
-    borderColor: '#4CAF50',
-    borderRadius: 4,
-    shadowColor: '#4CAF50',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  logoText: {
-    fontSize: 36,
-    fontWeight: '900',
-    color: '#4CAF50',
-    letterSpacing: 4,
-    textShadowColor: 'rgba(76, 175, 80, 0.5)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 6,
-  },
-  teamBadge: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#7cb342',
-    letterSpacing: 4,
-    marginTop: 8,
+  iconCircle: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: theme.colors.primaryLight + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: theme.spacing.lg,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#4CAF50',
-    marginBottom: 8,
+    ...theme.typography.h1,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.sm,
     textAlign: 'center',
-    letterSpacing: 2,
   },
   subtitle: {
-    fontSize: 14,
-    color: '#7cb342',
-    marginBottom: 40,
+    ...theme.typography.bodySmall,
+    color: theme.colors.textSecondary,
     textAlign: 'center',
-    letterSpacing: 1,
   },
-  inputContainer: {
-    marginBottom: 24,
+  formContainer: {
+    width: '100%',
+  },
+  label: {
+    ...theme.typography.bodySmall,
+    color: theme.colors.text,
+    fontWeight: '600',
+    marginBottom: theme.spacing.sm,
+    textAlign: 'center',
   },
   input: {
-    height: 56,
+    height: 64,
     borderWidth: 1,
-    borderColor: '#4CAF50',
-    borderRadius: 4,
-    paddingHorizontal: 16,
-    fontSize: 24,
-    backgroundColor: '#141824',
-    color: '#4CAF50',
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.md,
+    paddingHorizontal: theme.spacing.md,
+    fontSize: 28,
+    fontWeight: '600',
+    backgroundColor: theme.colors.surface,
+    color: theme.colors.text,
     textAlign: 'center',
-    letterSpacing: 8,
+    letterSpacing: 12,
+    marginBottom: theme.spacing.lg,
+    ...theme.shadows.sm,
   },
   button: {
     height: 56,
-    backgroundColor: '#4CAF50',
-    borderRadius: 4,
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.borderRadius.md,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#7cb342',
-    shadowColor: '#4CAF50',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 6,
+    marginBottom: theme.spacing.md,
+    ...theme.shadows.md,
   },
   buttonDisabled: {
-    opacity: 0.5,
+    opacity: 0.6,
   },
   buttonText: {
-    color: '#000',
-    fontSize: 18,
-    fontWeight: '700',
-    letterSpacing: 2,
+    ...theme.typography.button,
+    color: theme.colors.surface,
   },
   resendButton: {
-    padding: 12,
+    padding: theme.spacing.md,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#4CAF50',
-    borderRadius: 4,
   },
   resendText: {
-    color: '#4CAF50',
-    fontSize: 16,
+    ...theme.typography.body,
+    color: theme.colors.primary,
     fontWeight: '600',
-    letterSpacing: 1,
   },
 });

@@ -1,29 +1,33 @@
 import { Tabs } from 'expo-router';
 import { MessageCircle, User } from 'lucide-react-native';
+import { theme } from '@/constants/theme';
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#4CAF50',
-        tabBarInactiveTintColor: '#556b2f',
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.textDisabled,
         tabBarStyle: {
-          backgroundColor: '#141824',
-          borderTopWidth: 2,
-          borderTopColor: '#4CAF50',
-          shadowColor: '#4CAF50',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.3,
-          shadowRadius: 4,
-          elevation: 8,
+          backgroundColor: theme.colors.surface,
+          borderTopWidth: 1,
+          borderTopColor: theme.colors.divider,
+          paddingTop: 8,
+          paddingBottom: 8,
+          height: 60,
+          ...theme.shadows.lg,
+        },
+        tabBarLabelStyle: {
+          ...theme.typography.caption,
+          fontWeight: '600',
         },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Chats',
+          title: 'Messages',
           tabBarIcon: ({ size, color }) => (
             <MessageCircle size={size} color={color} />
           ),

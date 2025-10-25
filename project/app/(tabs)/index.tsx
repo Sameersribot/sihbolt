@@ -1,467 +1,3 @@
-// import React, { useEffect, useState } from 'react';
-// import {
-//   View,
-//   Text,
-//   FlatList,
-//   TouchableOpacity,
-//   StyleSheet,
-//   ActivityIndicator,
-//   TextInput,
-//   Alert,
-// } from 'react-native';
-// import { useRouter } from 'expo-router';
-// import { Plus, Search } from 'lucide-react-native';
-// import { supabase } from '@/lib/supabase';
-// import { useAuth } from '@/contexts/AuthContext';
-
-// interface Conversation {
-//   id: string;
-//   updated_at: string;
-//   other_user: {
-//     id: string;
-//     display_name: string;
-//     phone_number: string;
-//   };
-//   last_message?: {
-//     content: string;
-//     created_at: string;
-//   };
-// }
-
-// export default function ChatsScreen() {
-//   const [conversations, setConversations] = useState<Conversation[]>([]);
-//   const [loading, setLoading] = useState(true);
-//   const [searchQuery, setSearchQuery] = useState('');
-//   const [showNewChat, setShowNewChat] = useState(false);
-//   const [newChatPhone, setNewChatPhone] = useState('');
-//   const { session } = useAuth();
-//   const router = useRouter();
-
-//   useEffect(() => {
-//     if (session?.user) {
-//       loadConversations();
-
-//       const channel = supabase
-//         .channel('conversations')
-//         .on(
-//           'postgres_changes',
-//           {
-//             event: '*',
-//             schema: 'public',
-//             table: 'messages',
-//           },
-//           () => {
-//             loadConversations();
-//           }
-//         )
-//         .subscribe();
-
-//       return () => {
-//         supabase.removeChannel(channel);
-//       };
-//     }
-//   }, [session]);
-
-//   const loadConversations = async () => {
-//     if (!session?.user) return;
-
-//     const { data: participantData } = await supabase
-//       .from('conversation_participants')
-//       .select('conversation_id')
-//       .eq('user_id', session.user.id);
-
-//     if (!participantData || participantData.length === 0) {
-//       setConversations([]);
-//       setLoading(false);
-//       return;
-//     }
-
-//     const conversationIds = participantData.map((p) => p.conversation_id);
-
-//     const { data: conversationsData } = await supabase
-//       .from('conversations')
-//       .select('*')
-//       .in('id', conversationIds)
-//       .order('updated_at', { ascending: false });
-
-//     if (!conversationsData) {
-//       setLoading(false);
-//       return;
-//     }
-
-//     const conversationsWithDetails = await Promise.all(
-//       conversationsData.map(async (conv) => {
-//         const { data: participants } = await supabase
-//           .from('conversation_participants')
-//           .select('user_id')
-//           .eq('conversation_id', conv.id)
-//           .neq('user_id', session.user.id)
-//           .limit(1)
-//           .maybeSingle();
-
-//         if (!participants) return null;
-
-//         const { data: otherUser } = await supabase
-//           .from('profiles')
-//           .select('id, display_name, phone_number')
-//           .eq('id', participants.user_id)
-//           .single();
-
-//         const { data: lastMessage } = await supabase
-//           .from('messages')
-//           .select('content, created_at')
-//           .eq('conversation_id', conv.id)
-//           .order('created_at', { ascending: false })
-//           .limit(1)
-//           .maybeSingle();
-
-//         return {
-//           id: conv.id,
-//           updated_at: conv.updated_at,
-//           other_user: otherUser,
-//           last_message: lastMessage || undefined,
-//         };
-//       })
-//     );
-
-//     setConversations(
-//       conversationsWithDetails.filter((c) => c !== null) as Conversation[]
-//     );
-//     setLoading(false);
-//   };
-
-//   const createNewChat = async () => {
-//     if (!newChatPhone) {
-//       Alert.alert('Error', 'Please enter a phone number');
-//       return;
-//     }
-
-//     const { data: otherUser } = await supabase
-//       .from('profiles')
-//       .select('id')
-//       .eq('phone_number', newChatPhone)
-//       .maybeSingle();
-
-//     if (!otherUser) {
-//       Alert.alert('Error', 'User not found');
-//       return;
-//     }
-
-//     const { data: existingConv } = await supabase
-//       .from('conversation_participants')
-//       .select('conversation_id')
-//       .eq('user_id', session?.user.id);
-
-//     if (existingConv) {
-//       for (const conv of existingConv) {
-//         const { data: otherParticipant } = await supabase
-//           .from('conversation_participants')
-//           .select('user_id')
-//           .eq('conversation_id', conv.conversation_id)
-//           .eq('user_id', otherUser.id)
-//           .maybeSingle();
-
-//         if (otherParticipant) {
-//           setShowNewChat(false);
-//           setNewChatPhone('');
-//           router.push({
-//             pathname: '/chat/[id]',
-//             params: { id: conv.conversation_id },
-//           });
-//           return;
-//         }
-//       }
-//     }
-
-//     const { data: newConv } = await supabase
-//       .from('conversations')
-//       .insert({})
-//       .select()
-//       .single();
-
-//     if (newConv) {
-//       await supabase.from('conversation_participants').insert([
-//         { conversation_id: newConv.id, user_id: session?.user.id },
-//         { conversation_id: newConv.id, user_id: otherUser.id },
-//       ]);
-
-//       setShowNewChat(false);
-//       setNewChatPhone('');
-//       router.push({
-//         pathname: '/chat/[id]',
-//         params: { id: newConv.id },
-//       });
-//     }
-//   };
-
-//   const renderConversation = ({ item }: { item: Conversation }) => (
-//     <TouchableOpacity
-//       style={styles.conversationItem}
-//       onPress={() =>
-//         router.push({
-//           pathname: '/chat/[id]',
-//           params: { id: item.id },
-//         })
-//       }
-//     >
-//       <View style={styles.avatar}>
-//         <Text style={styles.avatarText}>
-//           {item.other_user.display_name.charAt(0).toUpperCase()}
-//         </Text>
-//       </View>
-//       <View style={styles.conversationContent}>
-//         <View style={styles.conversationHeader}>
-//           <Text style={styles.conversationName}>
-//             {item.other_user.display_name}
-//           </Text>
-//           {item.last_message && (
-//             <Text style={styles.conversationTime}>
-//               {new Date(item.last_message.created_at).toLocaleTimeString([], {
-//                 hour: '2-digit',
-//                 minute: '2-digit',
-//               })}
-//             </Text>
-//           )}
-//         </View>
-//         {item.last_message && (
-//           <Text style={styles.conversationMessage} numberOfLines={1}>
-//             {item.last_message.content}
-//           </Text>
-//         )}
-//       </View>
-//     </TouchableOpacity>
-//   );
-
-//   if (loading) {
-//     return (
-//       <View style={styles.centered}>
-//         <ActivityIndicator size="large" color="#007AFF" />
-//       </View>
-//     );
-//   }
-
-//   return (
-//     <View style={styles.container}>
-//       <View style={styles.header}>
-//         <Text style={styles.headerTitle}>Chats</Text>
-//         <TouchableOpacity
-//           style={styles.newChatButton}
-//           onPress={() => setShowNewChat(true)}
-//         >
-//           <Plus size={24} color="#007AFF" />
-//         </TouchableOpacity>
-//       </View>
-
-//       {showNewChat && (
-//         <View style={styles.newChatContainer}>
-//           <TextInput
-//             style={styles.newChatInput}
-//             placeholder="Enter phone number"
-//             value={newChatPhone}
-//             onChangeText={setNewChatPhone}
-//             keyboardType="phone-pad"
-//           />
-//           <TouchableOpacity style={styles.createButton} onPress={createNewChat}>
-//             <Text style={styles.createButtonText}>Start Chat</Text>
-//           </TouchableOpacity>
-//           <TouchableOpacity
-//             style={styles.cancelButton}
-//             onPress={() => {
-//               setShowNewChat(false);
-//               setNewChatPhone('');
-//             }}
-//           >
-//             <Text style={styles.cancelButtonText}>Cancel</Text>
-//           </TouchableOpacity>
-//         </View>
-//       )}
-
-//       <View style={styles.searchContainer}>
-//         <Search size={20} color="#999" style={styles.searchIcon} />
-//         <TextInput
-//           style={styles.searchInput}
-//           placeholder="Search chats"
-//           value={searchQuery}
-//           onChangeText={setSearchQuery}
-//         />
-//       </View>
-
-//       {conversations.length === 0 ? (
-//         <View style={styles.emptyContainer}>
-//           <Text style={styles.emptyText}>No conversations yet</Text>
-//           <Text style={styles.emptySubtext}>
-//             Tap the + button to start a new chat
-//           </Text>
-//         </View>
-//       ) : (
-//         <FlatList
-//           data={conversations.filter((conv) =>
-//             conv.other_user.display_name
-//               .toLowerCase()
-//               .includes(searchQuery.toLowerCase())
-//           )}
-//           renderItem={renderConversation}
-//           keyExtractor={(item) => item.id}
-//           contentContainerStyle={styles.listContent}
-//         />
-//       )}
-//     </View>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: '#fff',
-//   },
-//   centered: {
-//     flex: 1,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     backgroundColor: '#fff',
-//   },
-//   header: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     alignItems: 'center',
-//     paddingHorizontal: 20,
-//     paddingTop: 60,
-//     paddingBottom: 16,
-//     backgroundColor: '#fff',
-//     borderBottomWidth: 1,
-//     borderBottomColor: '#e0e0e0',
-//   },
-//   headerTitle: {
-//     fontSize: 32,
-//     fontWeight: '700',
-//     color: '#1a1a1a',
-//   },
-//   newChatButton: {
-//     width: 40,
-//     height: 40,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//   },
-//   newChatContainer: {
-//     padding: 16,
-//     backgroundColor: '#f9f9f9',
-//     borderBottomWidth: 1,
-//     borderBottomColor: '#e0e0e0',
-//   },
-//   newChatInput: {
-//     height: 48,
-//     borderWidth: 1,
-//     borderColor: '#e0e0e0',
-//     borderRadius: 8,
-//     paddingHorizontal: 12,
-//     fontSize: 16,
-//     backgroundColor: '#fff',
-//     marginBottom: 8,
-//   },
-//   createButton: {
-//     height: 48,
-//     backgroundColor: '#007AFF',
-//     borderRadius: 8,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     marginBottom: 8,
-//   },
-//   createButtonText: {
-//     color: '#fff',
-//     fontSize: 16,
-//     fontWeight: '600',
-//   },
-//   cancelButton: {
-//     height: 48,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//   },
-//   cancelButtonText: {
-//     color: '#007AFF',
-//     fontSize: 16,
-//   },
-//   searchContainer: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     paddingHorizontal: 20,
-//     paddingVertical: 12,
-//     backgroundColor: '#f9f9f9',
-//   },
-//   searchIcon: {
-//     marginRight: 8,
-//   },
-//   searchInput: {
-//     flex: 1,
-//     height: 40,
-//     fontSize: 16,
-//   },
-//   listContent: {
-//     paddingVertical: 8,
-//   },
-//   conversationItem: {
-//     flexDirection: 'row',
-//     paddingHorizontal: 20,
-//     paddingVertical: 12,
-//     borderBottomWidth: 1,
-//     borderBottomColor: '#f0f0f0',
-//   },
-//   avatar: {
-//     width: 50,
-//     height: 50,
-//     borderRadius: 25,
-//     backgroundColor: '#007AFF',
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     marginRight: 12,
-//   },
-//   avatarText: {
-//     color: '#fff',
-//     fontSize: 20,
-//     fontWeight: '600',
-//   },
-//   conversationContent: {
-//     flex: 1,
-//     justifyContent: 'center',
-//   },
-//   conversationHeader: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     alignItems: 'center',
-//     marginBottom: 4,
-//   },
-//   conversationName: {
-//     fontSize: 16,
-//     fontWeight: '600',
-//     color: '#1a1a1a',
-//   },
-//   conversationTime: {
-//     fontSize: 12,
-//     color: '#999',
-//   },
-//   conversationMessage: {
-//     fontSize: 14,
-//     color: '#666',
-//   },
-//   emptyContainer: {
-//     flex: 1,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     paddingHorizontal: 40,
-//   },
-//   emptyText: {
-//     fontSize: 20,
-//     fontWeight: '600',
-//     color: '#999',
-//     marginBottom: 8,
-//   },
-//   emptySubtext: {
-//     fontSize: 14,
-//     color: '#999',
-//     textAlign: 'center',
-//   },
-// });
-
-
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -472,11 +8,13 @@ import {
   ActivityIndicator,
   TextInput,
   Alert,
+  Modal,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Plus, Search } from 'lucide-react-native';
+import { Plus, Search, X, MessageCircle } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { theme } from '@/constants/theme';
 
 interface Conversation {
   id: string;
@@ -795,6 +333,7 @@ export default function ChatsScreen() {
           params: { id: item.id },
         })
       }
+      activeOpacity={0.7}
     >
       <View style={styles.avatar}>
         <Text style={styles.avatarText}>
@@ -815,10 +354,12 @@ export default function ChatsScreen() {
             </Text>
           )}
         </View>
-        {item.last_message && (
+        {item.last_message ? (
           <Text style={styles.conversationMessage} numberOfLines={1}>
             {item.last_message.content}
           </Text>
+        ) : (
+          <Text style={styles.conversationPlaceholder}>No messages yet</Text>
         )}
       </View>
     </TouchableOpacity>
@@ -827,7 +368,7 @@ export default function ChatsScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#4CAF50" />
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
   }
@@ -835,47 +376,22 @@ export default function ChatsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>DEFCOM</Text>
-          <Text style={styles.teamBadge}>TEAM IIPE</Text>
-        </View>
+        <Text style={styles.headerTitle}>Messages</Text>
         <TouchableOpacity
           style={styles.newChatButton}
           onPress={() => setShowNewChat(true)}
+          activeOpacity={0.7}
         >
-          <Plus size={24} color="#4CAF50" />
+          <Plus size={24} color={theme.colors.surface} />
         </TouchableOpacity>
       </View>
 
-      {showNewChat && (
-        <View style={styles.newChatContainer}>
-          <TextInput
-            style={styles.newChatInput}
-            placeholder="Enter email or username"
-            value={newChatIdentifier}
-            onChangeText={setNewChatIdentifier}
-            autoCapitalize="none"
-          />
-          <TouchableOpacity style={styles.createButton} onPress={createNewChat}>
-            <Text style={styles.createButtonText}>Start Chat</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.cancelButton}
-            onPress={() => {
-              setShowNewChat(false);
-              setNewChatIdentifier('');
-            }}
-          >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
       <View style={styles.searchContainer}>
-        <Search size={20} color="#4CAF50" style={styles.searchIcon} />
+        <Search size={20} color={theme.colors.textSecondary} style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
-          placeholder="Search chats"
+          placeholder="Search conversations"
+          placeholderTextColor={theme.colors.textDisabled}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
@@ -883,6 +399,7 @@ export default function ChatsScreen() {
 
       {conversations.length === 0 ? (
         <View style={styles.emptyContainer}>
+          <MessageCircle size={64} color={theme.colors.textDisabled} />
           <Text style={styles.emptyText}>No conversations yet</Text>
           <Text style={styles.emptySubtext}>
             Tap the + button to start a new chat
@@ -900,6 +417,49 @@ export default function ChatsScreen() {
           contentContainerStyle={styles.listContent}
         />
       )}
+
+      <Modal
+        visible={showNewChat}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowNewChat(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>New Conversation</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setShowNewChat(false);
+                  setNewChatIdentifier('');
+                }}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <X size={24} color={theme.colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.modalLabel}>Email or Username</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Enter email or username"
+              placeholderTextColor={theme.colors.textDisabled}
+              value={newChatIdentifier}
+              onChangeText={setNewChatIdentifier}
+              autoCapitalize="none"
+              autoFocus
+            />
+
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={createNewChat}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.modalButtonText}>Start Chat</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -907,149 +467,76 @@ export default function ChatsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0e1a',
+    backgroundColor: theme.colors.background,
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#0a0e1a',
+    backgroundColor: theme.colors.background,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: theme.spacing.lg,
     paddingTop: 60,
-    paddingBottom: 16,
-    backgroundColor: '#141824',
-    borderBottomWidth: 2,
-    borderBottomColor: '#4CAF50',
-    shadowColor: '#4CAF50',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
+    paddingBottom: theme.spacing.md,
+    backgroundColor: theme.colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.divider,
+    ...theme.shadows.sm,
   },
   headerTitle: {
-    fontSize: 32,
-    fontWeight: '900',
-    color: '#4CAF50',
-    letterSpacing: 2,
-    textShadowColor: 'rgba(76, 175, 80, 0.3)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
-  },
-  teamBadge: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#7cb342',
-    letterSpacing: 3,
-    marginTop: 2,
+    ...theme.typography.h1,
+    color: theme.colors.text,
   },
   newChatButton: {
-    width: 40,
-    height: 40,
+    width: 48,
+    height: 48,
+    borderRadius: theme.borderRadius.full,
+    backgroundColor: theme.colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(76, 175, 80, 0.15)',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#4CAF50',
-  },
-  newChatContainer: {
-    padding: 16,
-    backgroundColor: '#1a2332',
-    borderBottomWidth: 1,
-    borderBottomColor: '#4CAF50',
-  },
-  newChatInput: {
-    height: 48,
-    borderWidth: 1,
-    borderColor: '#4CAF50',
-    borderRadius: 4,
-    paddingHorizontal: 12,
-    fontSize: 16,
-    backgroundColor: '#141824',
-    color: '#e0e0e0',
-    marginBottom: 8,
-  },
-  createButton: {
-    height: 48,
-    backgroundColor: '#4CAF50',
-    borderRadius: 4,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: '#7cb342',
-  },
-  createButtonText: {
-    color: '#000',
-    fontSize: 16,
-    fontWeight: '700',
-    letterSpacing: 1,
-  },
-  cancelButton: {
-    height: 48,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#4CAF50',
-    borderRadius: 4,
-  },
-  cancelButtonText: {
-    color: '#4CAF50',
-    fontSize: 16,
-    fontWeight: '600',
+    ...theme.shadows.md,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    backgroundColor: '#1a2332',
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+    backgroundColor: theme.colors.surface,
   },
   searchIcon: {
-    marginRight: 8,
+    marginRight: theme.spacing.sm,
   },
   searchInput: {
     flex: 1,
-    height: 40,
-    fontSize: 16,
-    color: '#e0e0e0',
+    ...theme.typography.body,
+    color: theme.colors.text,
   },
   listContent: {
-    paddingVertical: 8,
+    paddingVertical: theme.spacing.sm,
   },
   conversationItem: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1a2332',
-    backgroundColor: '#141824',
-    marginHorizontal: 12,
-    marginVertical: 4,
-    borderRadius: 4,
-    borderLeftWidth: 3,
-    borderLeftColor: '#4CAF50',
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+    backgroundColor: theme.colors.surface,
+    marginVertical: 1,
   },
   avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 4,
-    backgroundColor: '#4CAF50',
+    width: 56,
+    height: 56,
+    borderRadius: theme.borderRadius.full,
+    backgroundColor: theme.colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
-    borderWidth: 1,
-    borderColor: '#7cb342',
+    marginRight: theme.spacing.md,
   },
   avatarText: {
-    color: '#000',
-    fontSize: 20,
-    fontWeight: '700',
+    ...theme.typography.h2,
+    color: theme.colors.surface,
   },
   conversationContent: {
     flex: 1,
@@ -1059,37 +546,94 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: theme.spacing.xs,
   },
   conversationName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#4CAF50',
+    ...theme.typography.body,
+    fontWeight: '600',
+    color: theme.colors.text,
   },
   conversationTime: {
-    fontSize: 12,
-    color: '#7cb342',
+    ...theme.typography.caption,
+    color: theme.colors.textSecondary,
   },
   conversationMessage: {
-    fontSize: 14,
-    color: '#a0a0a0',
+    ...theme.typography.bodySmall,
+    color: theme.colors.textSecondary,
+  },
+  conversationPlaceholder: {
+    ...theme.typography.bodySmall,
+    color: theme.colors.textDisabled,
+    fontStyle: 'italic',
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 40,
+    paddingHorizontal: theme.spacing.xl,
   },
   emptyText: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#4CAF50',
-    marginBottom: 8,
-    letterSpacing: 1,
+    ...theme.typography.h3,
+    color: theme.colors.textSecondary,
+    marginTop: theme.spacing.lg,
+    marginBottom: theme.spacing.sm,
   },
   emptySubtext: {
-    fontSize: 14,
-    color: '#7cb342',
+    ...theme.typography.body,
+    color: theme.colors.textSecondary,
     textAlign: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: theme.colors.overlay,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing.lg,
+  },
+  modalContent: {
+    width: '100%',
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.lg,
+    ...theme.shadows.lg,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: theme.spacing.lg,
+  },
+  modalTitle: {
+    ...theme.typography.h2,
+    color: theme.colors.text,
+  },
+  modalLabel: {
+    ...theme.typography.bodySmall,
+    color: theme.colors.text,
+    fontWeight: '600',
+    marginBottom: theme.spacing.sm,
+  },
+  modalInput: {
+    height: 56,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.md,
+    paddingHorizontal: theme.spacing.md,
+    ...theme.typography.body,
+    color: theme.colors.text,
+    backgroundColor: theme.colors.surface,
+    marginBottom: theme.spacing.lg,
+  },
+  modalButton: {
+    height: 56,
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.borderRadius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...theme.shadows.md,
+  },
+  modalButtonText: {
+    ...theme.typography.button,
+    color: theme.colors.surface,
   },
 });
